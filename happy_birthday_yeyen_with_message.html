@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday, Yeyen!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    #term {
+      background: #0a0a0a;
+      color: #00ff41;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      padding: 14px;
+      width: 100%;
+      max-width: 720px;
+      border-radius: 10px;
+      border: 1px solid #1a1a1a;
+      box-shadow: 0 0 40px rgba(0,255,65,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    #titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .d-r { background: #ff5f57; }
+    .d-y { background: #febc2e; }
+    .d-g { background: #28c840; }
+    #titletext { flex: 1; text-align: center; font-size: 11px; color: #444; }
+
+    #scroll-area {
+      overflow-y: auto;
+      max-height: 520px;
+      flex: 1;
+      scroll-behavior: smooth;
+    }
+    #scroll-area::-webkit-scrollbar { width: 4px; }
+    #scroll-area::-webkit-scrollbar-track { background: #0a0a0a; }
+    #scroll-area::-webkit-scrollbar-thumb { background: #1f4a1f; border-radius: 4px; }
+
+    #log { min-height: 240px; }
+    .line { display: block; line-height: 1.5; }
+    .err  { color: #ff4444; }
+    .warn { color: #ffaa00; }
+    .info { color: #00ff41; }
+    .sys  { color: #888; }
+    .hb   { color: #ff69b4; white-space: pre; font-size: 8.5px; line-height: 1.35; }
+
+    #banner {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #1a1a1a;
+    }
+    #msgbox {
+      background: #111;
+      border: 1px solid #ffe066;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      display: none;
+    }
+    #msgbox .sender { color: #ffe066; font-size: 11px; margin-bottom: 6px; }
+    #msgbox .body   { color: #ffe066; font-size: 12px; line-height: 1.7; white-space: pre-wrap; }
+
+    #prompt {
+      margin-top: 10px;
+      padding-top: 6px;
+      border-top: 1px solid #1a1a1a;
+      color: #888;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: #00ff41;
+      animation: blink 0.8s step-end infinite;
+      vertical-align: middle;
+      margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+<div id="term">
+  <div id="titlebar">
+    <div class="dot d-r"></div>
+    <div class="dot d-y"></div>
+    <div class="dot d-g"></div>
+    <div id="titletext">bash — kernel panic — 80×24</div>
+  </div>
+
+  <div id="scroll-area">
+    <div id="log"></div>
+    <div id="banner"></div>
+    <div id="msgbox">
+      <div class="sender">── incoming transmission ── from: Mr. Kepal ──</div>
+      <div class="body" id="msgbody"></div>
+    </div>
+  </div>
+
+  <div id="prompt">
+    <span style="color:#00ff41">root@system</span><span style="color:#888">:~# </span><span id="cmd"></span><span class="cursor"></span>
+  </div>
+</div>
+
+<script>
+const scrollArea = document.getElementById('scroll-area');
+const log        = document.getElementById('log');
+const banner     = document.getElementById('banner');
+const msgbox     = document.getElementById('msgbox');
+const msgbody    = document.getElementById('msgbody');
+const cmdEl      = document.getElementById('cmd');
+
+// ======================= DATA =======================
+const hbArt = [
+  " ██╗  ██╗ █████╗ ██████╗ ██████╗ ██╗   ██╗",
+  " ██║  ██║██╔══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝",
+  " ███████║███████║██████╔╝██████╔╝ ╚████╔╝ ",
+  " ██╔══██║██╔══██║██╔═══╝ ██╔═══╝   ╚██╔╝  ",
+  " ██║  ██║██║  ██║██║     ██║        ██║   ",
+  " ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝        ╚═╝   ",
+  "",
+  " ██████╗ ██╗██████╗ ████████╗██╗  ██╗██████╗  █████╗ ██╗   ██╗",
+  " ██╔══██╗██║██╔══██╗╚══██╔══╝██║  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝",
+  " ██████╔╝██║██████╔╝   ██║   ███████║██║  ██║███████║ ╚████╔╝ ",
+  " ██╔══██╗██║██╔══██╗   ██║   ██╔══██║██║  ██║██╔══██║  ╚██╔╝  ",
+  " ██████╔╝██║██║  ██║   ██║   ██║  ██║██████╔╝██║  ██║   ██║   ",
+  " ╚═════╝ ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
+  "",
+  " ██╗   ██╗███████╗██╗   ██╗███████╗███╗   ██╗ ██╗",
+  " ╚██╗ ██╔╝██╔════╝╚██╗ ██╔╝██╔════╝████╗  ██║ ██║",
+  "  ╚████╔╝ █████╗   ╚████╔╝ █████╗  ██╔██╗ ██║ ██║",
+  "   ╚██╔╝  ██╔══╝    ╚██╔╝  ██╔══╝  ██║╚██╗██║ ╚═╝",
+  "    ██║   ███████╗   ██║   ███████╗██║ ╚████║ ██╗",
+  "    ╚═╝   ╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═══╝ ╚═╝",
+];
+
+const secretMsg = `おめでとう \nI hope you have a great day.\nGood luck and if it's not too late,\nplease wait for me.\n\n                         — Mr. Kepal`;
+
+const errors1 = [
+  ["err",  "[FATAL] Segmentation fault (core dumped) — pid 1337"],
+  ["err",  "[ERROR] kernel: NULL pointer dereference at 0x0000000000000000"],
+  ["err",  "[PANIC] stack smashing detected — process terminated"],
+  ["warn", "[WARN ] memory leak detected: 4,294,967,295 bytes lost"],
+  ["err",  "[ERROR] /proc/self/mem: Input/output error"],
+  ["err",  "[FATAL] Bus error (core dumped)"],
+  ["warn", "[WARN ] swap space critically low: 0KB remaining"],
+  ["err",  "[ERROR] CPU exception: General Protection Fault #GP(0)"],
+  ["err",  "[FATAL] double free or corruption (fasttop)"],
+  ["warn", "[WARN ] zombie process detected: pid 9999 <defunct>"],
+  ["err",  "[ERROR] SIGSEGV received in thread 0x7f8b1c000000"],
+  ["sys",  "[SYS  ] attempting to recover... ██░░░░░░░░ 20%"],
+  ["sys",  "[SYS  ] attempting to recover... █████░░░░░ 50%"],
+  ["sys",  "[SYS  ] attempting to recover... ████████░░ 80%"],
+  ["err",  "[FATAL] recovery failed — cascading failure initiated"],
+];
+
+const errors2 = [
+  ["err",  "[ERROR] filesystem corruption: ext4-fs error on sda1"],
+  ["warn", "[WARN ] clock skew detected — time may be unreliable"],
+  ["err",  "[ERROR] unable to mount /dev/love: device not found"],
+  ["err",  "[FATAL] assertion failed: happiness == 0"],
+  ["warn", "[WARN ] entropy pool exhausted — randomness compromised"],
+  ["err",  "[ERROR] oom-killer invoked: process 'sadness' killed"],
+  ["sys",  "[SYS  ] encrypted packet received on port 4ever"],
+  ["warn", "[WARN ] decryption key: heart.pem — loading..."],
+  ["sys",  "[SYS  ] verifying signature... ████████████ 100%"],
+  ["info", "[INFO ] signature valid — sender: Mr. Kepal"],
+  ["sys",  "[SYS  ] decoding message payload..."],
+  ["info", "[INFO ] message integrity: OK"],
+  ["warn", "[WARN ] emotional content detected — handle with care"],
+];
+
+const cmdTexts = [
+  "sudo rm -rf /sadness",
+  "cat /proc/heart",
+  "./birthday.sh --target yeyen",
+  "openssl decrypt -in love.enc",
+  "bash send_message.sh --to yeyen",
+];
+
+// ======================= VARIABEL =======================
+let step = 0; // 0: error1, 1: banner, 2: error2, 3: pesan
+let err1_index = 0;
+let err2_index = 0;
+let cmdIndex = 0;
+let cmdChar = 0;
+let typingActive = false;
+let currentTimeout = null;
+
+function scrollBottom() {
+  scrollArea.scrollTop = scrollArea.scrollHeight;
+}
+
+function addLine(cls, text, targetLog = log) {
+  const span = document.createElement('span');
+  span.className = 'line ' + cls;
+  span.textContent = text;
+  targetLog.appendChild(span);
+  scrollBottom();
+  // batasi panjang log saat fase error1
+  if (step === 0 && targetLog === log && targetLog.children.length > 22) {
+    while (targetLog.children.length > 20) targetLog.removeChild(targetLog.children[0]);
+  }
+}
+
+function clearBanner() { banner.innerHTML = ''; }
+function hideMsgBox() { msgbox.style.display = 'none'; msgbody.textContent = ''; }
+
+// ======================= BANNER HAPPY BIRTHDAY =======================
+function showHappyBirthday(callback) {
+  clearBanner();
+  hideMsgBox();
+  let i = 0;
+  function drawLine() {
+    if (i < hbArt.length) {
+      const pre = document.createElement('span');
+      pre.className = 'line hb';
+      pre.textContent = hbArt[i];
+      banner.appendChild(pre);
+      scrollBottom();
+      i++;
+      currentTimeout = setTimeout(drawLine, 38);
+    } else {
+      currentTimeout = setTimeout(callback, 2800);
+    }
+  }
+  drawLine();
+}
+
+// ======================= PESAN RAHASIA =======================
+function showSecretMessage(callback) {
+  msgbox.style.display = 'block';
+  msgbody.textContent = '';
+  typingActive = true;
+  scrollBottom();
+  let idx = 0;
+  function typeChar() {
+    if (!typingActive) return;
+    if (idx < secretMsg.length) {
+      msgbody.textContent += secretMsg[idx];
+      idx++;
+      scrollBottom();
+      const delay = secretMsg[idx-1] === '\n' ? 200 : 35;
+      currentTimeout = setTimeout(typeChar, delay);
+    } else {
+      typingActive = false;
+      currentTimeout = setTimeout(callback, 10000);
+    }
+  }
+  typeChar();
+}
+
+// ======================= RESET LOOP =======================
+function resetAndRestart() {
+  if (currentTimeout) clearTimeout(currentTimeout);
+  typingActive = false;
+  step = 0;
+  err1_index = 0;
+  err2_index = 0;
+  log.innerHTML = '';
+  clearBanner();
+  hideMsgBox();
+  scrollArea.scrollTop = 0;
+  runSequence();
+}
+
+// ======================= INTI URUTAN (PASTI BERURUTAN) =======================
+function runSequence() {
+  if (step === 0) {
+    // Fase 1: error pertama
+    if (err1_index < errors1.length) {
+      const [cls, txt] = errors1[err1_index++];
+      addLine(cls, txt, log);
+      currentTimeout = setTimeout(runSequence, 90 + Math.random() * 110);
+    } else {
+      // error pertama selesai -> pindah ke banner
+      step = 1;
+      showHappyBirthday(() => {
+        step = 2;
+        runSequence();
+      });
+    }
+  } 
+  else if (step === 2) {
+    // Fase 2: error kedua (setelah banner SELESAI)
+    if (err2_index < errors2.length) {
+      const [cls, txt] = errors2[err2_index++];
+      addLine(cls, txt, log);
+      currentTimeout = setTimeout(runSequence, 90 + Math.random() * 130);
+    } else {
+      // error kedua selesai -> pindah ke pesan
+      step = 3;
+      showSecretMessage(() => {
+        resetAndRestart();
+      });
+    }
+  }
+}
+
+// ======================= ANIMASI COMMAND PROMPT =======================
+function typeCommand() {
+  const target = cmdTexts[cmdIndex % cmdTexts.length];
+  if (cmdChar <= target.length) {
+    cmdEl.textContent = target.slice(0, cmdChar);
+    cmdChar++;
+    setTimeout(typeCommand, 65);
+  } else {
+    setTimeout(() => {
+      cmdChar = 0;
+      cmdIndex++;
+      setTimeout(typeCommand, 300);
+    }, 900);
+  }
+}
+
+// ======================= MULAI =======================
+typeCommand();
+runSequence();
+</script>
+</body>
+</html>
