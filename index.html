@@ -2,186 +2,389 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Happy Birthday, Yeyen!</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green: #00ff41;
+      --green-dim: #00cc33;
+      --green-dark: #003d10;
+      --pink: #ff69b4;
+      --yellow: #ffe066;
+      --red: #ff4444;
+      --orange: #ffaa00;
+      --bg: #000;
+      --term-bg: #050505;
+      --border: #1a1a1a;
+      --sys: #555;
+      --font: 'Share Tech Mono', monospace;
     }
-    #term {
-      background: #0a0a0a;
-      color: #00ff41;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 12px;
-      padding: 14px;
+
+    html, body {
       width: 100%;
-      max-width: 720px;
-      border-radius: 10px;
-      border: 1px solid #1a1a1a;
-      box-shadow: 0 0 40px rgba(0,255,65,0.08);
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    body {
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-family: var(--font);
+      /* Scanline overlay */
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 65, 0.015) 2px,
+        rgba(0, 255, 65, 0.015) 4px
+      );
     }
+
+    /* ── Phone frame wrapper ── */
+    #phone {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* CRT vignette */
+    #phone::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ── Status bar (fake phone) ── */
+    #statusbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 18px 4px;
+      font-size: 11px;
+      color: var(--sys);
+      flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
+    #statusbar .time { color: var(--green-dim); font-size: 12px; }
+    #statusbar .icons { display: flex; gap: 6px; align-items: center; }
+    .bar-icon { font-size: 10px; color: var(--sys); }
+
+    /* ── Terminal window ── */
+    #term {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin: 0 8px 8px;
+      background: var(--term-bg);
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      box-shadow:
+        0 0 0 1px #0a0a0a,
+        0 0 30px rgba(0,255,65,0.06),
+        inset 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    /* ── Title bar ── */
     #titlebar {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #1a1a1a;
+      gap: 7px;
+      padding: 9px 12px 8px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      background: #080808;
+      border-radius: 12px 12px 0 0;
     }
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
-    .d-r { background: #ff5f57; }
-    .d-y { background: #febc2e; }
-    .d-g { background: #28c840; }
-    #titletext { flex: 1; text-align: center; font-size: 11px; color: #444; }
-
-    #scroll-area {
-      overflow-y: auto;
-      max-height: 520px;
+    .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .d-r { background: #ff5f57; box-shadow: 0 0 4px #ff5f5766; }
+    .d-y { background: #febc2e; box-shadow: 0 0 4px #febc2e66; }
+    .d-g { background: #28c840; box-shadow: 0 0 4px #28c84066; }
+    #titletext {
       flex: 1;
+      text-align: center;
+      font-size: 10px;
+      color: #333;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Scroll area ── */
+    #scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 10px 10px 4px;
       scroll-behavior: smooth;
     }
-    #scroll-area::-webkit-scrollbar { width: 4px; }
-    #scroll-area::-webkit-scrollbar-track { background: #0a0a0a; }
-    #scroll-area::-webkit-scrollbar-thumb { background: #1f4a1f; border-radius: 4px; }
+    #scroll-area::-webkit-scrollbar { width: 3px; }
+    #scroll-area::-webkit-scrollbar-track { background: transparent; }
+    #scroll-area::-webkit-scrollbar-thumb { background: #1a3a1a; border-radius: 3px; }
 
-    #log { min-height: 240px; }
-    .line { display: block; line-height: 1.5; }
-    .err  { color: #ff4444; }
-    .warn { color: #ffaa00; }
-    .info { color: #00ff41; }
-    .sys  { color: #888; }
-    .hb   { color: #ff69b4; white-space: pre; font-size: 8.5px; line-height: 1.35; }
-
-    #banner {
-      margin-top: 6px;
-      padding-top: 6px;
-      border-top: 1px solid #1a1a1a;
+    /* ── Log lines ── */
+    #log { }
+    .line {
+      display: block;
+      line-height: 1.55;
+      font-size: 11px;
+      word-break: break-all;
+      animation: fadein 0.15s ease;
     }
-    #msgbox {
-      background: #111;
-      border: 1px solid #ffe066;
-      border-radius: 6px;
-      padding: 10px 14px;
-      margin-top: 10px;
+    @keyframes fadein { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; } }
+
+    .err  { color: var(--red); }
+    .warn { color: var(--orange); }
+    .info { color: var(--green); }
+    .sys  { color: var(--sys); }
+
+    /* ── ASCII art banner ── */
+    #banner { margin: 8px 0 4px; }
+    .hb {
+      display: block;
+      white-space: pre;
+      font-size: 5.2px;
+      line-height: 1.3;
+      color: var(--pink);
+      text-shadow: 0 0 8px rgba(255,105,180,0.5);
+      animation: glowpulse 2s ease-in-out infinite alternate;
+      letter-spacing: 0.01em;
+    }
+    @keyframes glowpulse {
+      from { text-shadow: 0 0 6px rgba(255,105,180,0.4); }
+      to   { text-shadow: 0 0 14px rgba(255,105,180,0.8), 0 0 24px rgba(255,105,180,0.3); }
+    }
+
+    /* Stars burst animation on banner reveal */
+    #stars {
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 6px;
+      margin: 6px 0;
+      color: var(--yellow);
+      animation: sparkle 1.5s ease-in-out infinite alternate;
       display: none;
     }
-    #msgbox .sender { color: #ffe066; font-size: 11px; margin-bottom: 6px; }
-    #msgbox .body   { color: #ffe066; font-size: 12px; line-height: 1.7; white-space: pre-wrap; }
+    @keyframes sparkle {
+      from { opacity: 0.5; letter-spacing: 4px; }
+      to   { opacity: 1; letter-spacing: 8px; }
+    }
 
-    #prompt {
-      margin-top: 10px;
-      padding-top: 6px;
-      border-top: 1px solid #1a1a1a;
-      color: #888;
-      font-size: 11px;
+    /* ── Message box ── */
+    #msgbox {
+      margin: 8px 0 4px;
+      background: #0d0d00;
+      border: 1px solid var(--yellow);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: none;
+      box-shadow: 0 0 20px rgba(255,224,102,0.08);
+      animation: msgappear 0.4s ease;
+    }
+    @keyframes msgappear {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #msgbox .sender {
+      color: var(--yellow);
+      font-size: 9.5px;
+      margin-bottom: 8px;
+      letter-spacing: 0.06em;
+      opacity: 0.75;
+    }
+    #msgbox .body {
+      color: var(--yellow);
+      font-size: 12px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+    #msgbox .cursor-msg {
+      display: inline-block;
+      width: 7px; height: 13px;
+      background: var(--yellow);
+      vertical-align: middle;
+      margin-left: 1px;
+      animation: blink 0.7s step-end infinite;
+    }
+
+    /* ── Prompt bar ── */
+    #prompt-bar {
+      padding: 8px 10px 10px;
+      border-top: 1px solid var(--border);
       flex-shrink: 0;
+      background: #080808;
+      border-radius: 0 0 12px 12px;
+    }
+    #prompt-line {
+      font-size: 11px;
+      color: var(--sys);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .ps1-user { color: var(--green); }
+    .ps1-host { color: #00cc33; }
+    .ps1-path { color: #4488ff; }
+    #cmd-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: clip;
+      color: #ccc;
     }
     .cursor {
       display: inline-block;
-      width: 8px; height: 14px;
-      background: #00ff41;
+      width: 7px; height: 13px;
+      background: var(--green);
       animation: blink 0.8s step-end infinite;
       vertical-align: middle;
       margin-left: 2px;
+      flex-shrink: 0;
     }
     @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── Progress bar line ── */
+    .progress-line { color: var(--sys); }
+
+    /* ── Bottom nav (fake phone) ── */
+    #bottomnav {
+      height: env(safe-area-inset-bottom, 0px);
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
-<div id="term">
-  <div id="titlebar">
-    <div class="dot d-r"></div>
-    <div class="dot d-y"></div>
-    <div class="dot d-g"></div>
-    <div id="titletext">bash — kernel panic — 80×24</div>
-  </div>
+<div id="phone">
 
-  <div id="scroll-area">
-    <div id="log"></div>
-    <div id="banner"></div>
-    <div id="msgbox">
-      <div class="sender">── incoming transmission ── from: Mr. Kepal ──</div>
-      <div class="body" id="msgbody"></div>
+  <!-- Fake status bar -->
+  <div id="statusbar">
+    <span class="time" id="clockDisplay">--:--</span>
+    <div class="icons">
+      <span class="bar-icon">▂▄▆</span>
+      <span class="bar-icon">WiFi</span>
+      <span class="bar-icon">⚡</span>
     </div>
   </div>
 
-  <div id="prompt">
-    <span style="color:#00ff41">root@system</span><span style="color:#888">:~# </span><span id="cmd"></span><span class="cursor"></span>
+  <!-- Terminal -->
+  <div id="term">
+    <div id="titlebar">
+      <div class="dot d-r"></div>
+      <div class="dot d-y"></div>
+      <div class="dot d-g"></div>
+      <div id="titletext">bash — kernel panic — 80×24</div>
+    </div>
+
+    <div id="scroll-area">
+      <div id="log"></div>
+      <div id="banner">
+        <div id="stars"></div>
+      </div>
+      <div id="msgbox">
+        <div class="sender">── incoming transmission ── from: Mr. Kepal ──</div>
+        <div class="body" id="msgbody"><span id="msgcursor" class="cursor-msg" style="display:none"></span></div>
+      </div>
+    </div>
+
+    <div id="prompt-bar">
+      <div id="prompt-line">
+        <span class="ps1-user">root</span><span style="color:#555">@</span><span class="ps1-host">system</span><span style="color:#555">:</span><span class="ps1-path">~</span><span style="color:#555"># </span><span id="cmd-text"></span><span class="cursor"></span>
+      </div>
+    </div>
   </div>
+
+  <div id="bottomnav"></div>
 </div>
 
 <script>
+// ── Elements ──
 const scrollArea = document.getElementById('scroll-area');
 const log        = document.getElementById('log');
 const banner     = document.getElementById('banner');
+const stars      = document.getElementById('stars');
 const msgbox     = document.getElementById('msgbox');
 const msgbody    = document.getElementById('msgbody');
-const cmdEl      = document.getElementById('cmd');
+const msgcursor  = document.getElementById('msgcursor');
+const cmdEl      = document.getElementById('cmd-text');
+const clockEl    = document.getElementById('clockDisplay');
 
-// ======================= DATA =======================
+// ── Clock ──
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  clockEl.textContent = h + ':' + m;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ── ASCII Art (small, mobile-friendly) ──
 const hbArt = [
-  " ██╗  ██╗ █████╗ ██████╗ ██████╗ ██╗   ██╗",
-  " ██║  ██║██╔══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝",
-  " ███████║███████║██████╔╝██████╔╝ ╚████╔╝ ",
-  " ██╔══██║██╔══██║██╔═══╝ ██╔═══╝   ╚██╔╝  ",
-  " ██║  ██║██║  ██║██║     ██║        ██║   ",
-  " ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝        ╚═╝   ",
+  "██╗  ██╗ █████╗ ██████╗ ██████╗ ██╗   ██╗",
+  "██║  ██║██╔══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝",
+  "███████║███████║██████╔╝██████╔╝ ╚████╔╝ ",
+  "██╔══██║██╔══██║██╔═══╝ ██╔═══╝   ╚██╔╝  ",
+  "██║  ██║██║  ██║██║     ██║        ██║   ",
+  "╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝        ╚═╝   ",
   "",
-  " ██████╗ ██╗██████╗ ████████╗██╗  ██╗██████╗  █████╗ ██╗   ██╗",
-  " ██╔══██╗██║██╔══██╗╚══██╔══╝██║  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝",
-  " ██████╔╝██║██████╔╝   ██║   ███████║██║  ██║███████║ ╚████╔╝ ",
-  " ██╔══██╗██║██╔══██╗   ██║   ██╔══██║██║  ██║██╔══██║  ╚██╔╝  ",
-  " ██████╔╝██║██║  ██║   ██║   ██║  ██║██████╔╝██║  ██║   ██║   ",
-  " ╚═════╝ ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
+  "██████╗ ██╗██████╗ ████████╗██╗  ██╗██████╗  █████╗ ██╗   ██╗",
+  "██╔══██╗██║██╔══██╗╚══██╔══╝██║  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝",
+  "██████╔╝██║██████╔╝   ██║   ███████║██║  ██║███████║ ╚████╔╝ ",
+  "██╔══██╗██║██╔══██╗   ██║   ██╔══██║██║  ██║██╔══██║  ╚██╔╝  ",
+  "██████╔╝██║██║  ██║   ██║   ██║  ██║██████╔╝██║  ██║   ██║   ",
+  "╚═════╝ ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
   "",
-  " ██╗   ██╗███████╗██╗   ██╗███████╗███╗   ██╗ ██╗",
-  " ╚██╗ ██╔╝██╔════╝╚██╗ ██╔╝██╔════╝████╗  ██║ ██║",
-  "  ╚████╔╝ █████╗   ╚████╔╝ █████╗  ██╔██╗ ██║ ██║",
-  "   ╚██╔╝  ██╔══╝    ╚██╔╝  ██╔══╝  ██║╚██╗██║ ╚═╝",
-  "    ██║   ███████╗   ██║   ███████╗██║ ╚████║ ██╗",
-  "    ╚═╝   ╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═══╝ ╚═╝",
+  "██╗   ██╗███████╗██╗   ██╗███████╗███╗   ██╗ ██╗",
+  "╚██╗ ██╔╝██╔════╝╚██╗ ██╔╝██╔════╝████╗  ██║ ██║",
+  " ╚████╔╝ █████╗   ╚████╔╝ █████╗  ██╔██╗ ██║ ██║",
+  "  ╚██╔╝  ██╔══╝    ╚██╔╝  ██╔══╝  ██║╚██╗██║ ╚═╝",
+  "   ██║   ███████╗   ██║   ███████╗██║ ╚████║ ██╗",
+  "   ╚═╝   ╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═══╝ ╚═╝",
 ];
 
-const secretMsg = `おめでとう \nI hope you have a great day.\nGood luck and if it's not too late,\nplease wait for me.\n\n                         — Mr. Kepal`;
+const secretMsg = `おめでとう\nI hope you have a great day.\nGood luck and if it's not too late,\nplease wait for me.\n\n                   — Mr. Kepal`;
 
 const errors1 = [
   ["err",  "[FATAL] Segmentation fault (core dumped) — pid 1337"],
-  ["err",  "[ERROR] kernel: NULL pointer dereference at 0x0000000000000000"],
+  ["err",  "[ERROR] NULL pointer dereference at 0x000000000000"],
   ["err",  "[PANIC] stack smashing detected — process terminated"],
-  ["warn", "[WARN ] memory leak detected: 4,294,967,295 bytes lost"],
+  ["warn", "[WARN ] memory leak: 4,294,967,295 bytes lost"],
   ["err",  "[ERROR] /proc/self/mem: Input/output error"],
   ["err",  "[FATAL] Bus error (core dumped)"],
   ["warn", "[WARN ] swap space critically low: 0KB remaining"],
   ["err",  "[ERROR] CPU exception: General Protection Fault #GP(0)"],
   ["err",  "[FATAL] double free or corruption (fasttop)"],
-  ["warn", "[WARN ] zombie process detected: pid 9999 <defunct>"],
-  ["err",  "[ERROR] SIGSEGV received in thread 0x7f8b1c000000"],
-  ["sys",  "[SYS  ] attempting to recover... ██░░░░░░░░ 20%"],
-  ["sys",  "[SYS  ] attempting to recover... █████░░░░░ 50%"],
-  ["sys",  "[SYS  ] attempting to recover... ████████░░ 80%"],
-  ["err",  "[FATAL] recovery failed — cascading failure initiated"],
+  ["warn", "[WARN ] zombie process: pid 9999 <defunct>"],
+  ["err",  "[ERROR] SIGSEGV in thread 0x7f8b1c000000"],
+  ["sys",  "[SYS  ] attempting recovery... ██░░░░░ 20%"],
+  ["sys",  "[SYS  ] attempting recovery... █████░░ 50%"],
+  ["sys",  "[SYS  ] attempting recovery... ███████ 80%"],
+  ["err",  "[FATAL] recovery failed — cascade failure initiated"],
 ];
 
 const errors2 = [
-  ["err",  "[ERROR] filesystem corruption: ext4-fs error on sda1"],
-  ["warn", "[WARN ] clock skew detected — time may be unreliable"],
+  ["err",  "[ERROR] filesystem corruption on sda1"],
+  ["warn", "[WARN ] clock skew — time may be unreliable"],
   ["err",  "[ERROR] unable to mount /dev/love: device not found"],
   ["err",  "[FATAL] assertion failed: happiness == 0"],
-  ["warn", "[WARN ] entropy pool exhausted — randomness compromised"],
-  ["err",  "[ERROR] oom-killer invoked: process 'sadness' killed"],
-  ["sys",  "[SYS  ] encrypted packet received on port 4ever"],
+  ["warn", "[WARN ] entropy pool exhausted"],
+  ["err",  "[ERROR] oom-killer: process 'sadness' killed"],
+  ["sys",  "[SYS  ] encrypted packet on port 4ever"],
   ["warn", "[WARN ] decryption key: heart.pem — loading..."],
-  ["sys",  "[SYS  ] verifying signature... ████████████ 100%"],
+  ["sys",  "[SYS  ] verifying signature... ████████ 100%"],
   ["info", "[INFO ] signature valid — sender: Mr. Kepal"],
   ["sys",  "[SYS  ] decoding message payload..."],
   ["info", "[INFO ] message integrity: OK"],
@@ -196,35 +399,45 @@ const cmdTexts = [
   "bash send_message.sh --to yeyen",
 ];
 
-// ======================= VARIABEL =======================
-let step = 0; // 0: error1, 1: banner, 2: error2, 3: pesan
-let err1_index = 0;
-let err2_index = 0;
-let cmdIndex = 0;
-let cmdChar = 0;
+// ── State ──
+let step = 0;
+let err1i = 0, err2i = 0;
+let cmdIndex = 0, cmdChar = 0;
 let typingActive = false;
-let currentTimeout = null;
+let currentTO = null;
 
 function scrollBottom() {
   scrollArea.scrollTop = scrollArea.scrollHeight;
 }
 
-function addLine(cls, text, targetLog = log) {
+function addLine(cls, text) {
   const span = document.createElement('span');
   span.className = 'line ' + cls;
   span.textContent = text;
-  targetLog.appendChild(span);
-  scrollBottom();
-  // batasi panjang log saat fase error1
-  if (step === 0 && targetLog === log && targetLog.children.length > 22) {
-    while (targetLog.children.length > 20) targetLog.removeChild(targetLog.children[0]);
+  log.appendChild(span);
+  // Keep log from growing forever in error phase
+  if (step === 0 && log.children.length > 24) {
+    while (log.children.length > 20) log.removeChild(log.children[0]);
   }
+  scrollBottom();
 }
 
-function clearBanner() { banner.innerHTML = ''; }
-function hideMsgBox() { msgbox.style.display = 'none'; msgbody.textContent = ''; }
+function clearBanner() {
+  // Remove all hb lines but keep stars div
+  const hbLines = banner.querySelectorAll('.hb');
+  hbLines.forEach(el => el.remove());
+  stars.style.display = 'none';
+  stars.textContent = '';
+}
 
-// ======================= BANNER HAPPY BIRTHDAY =======================
+function hideMsgBox() {
+  msgbox.style.display = 'none';
+  msgbody.textContent = '';
+  msgcursor.style.display = 'none';
+  msgbody.appendChild(msgcursor);
+}
+
+// ── Banner ──
 function showHappyBirthday(callback) {
   clearBanner();
   hideMsgBox();
@@ -232,49 +445,57 @@ function showHappyBirthday(callback) {
   function drawLine() {
     if (i < hbArt.length) {
       const pre = document.createElement('span');
-      pre.className = 'line hb';
+      pre.className = 'hb';
       pre.textContent = hbArt[i];
-      banner.appendChild(pre);
+      // Insert before stars
+      banner.insertBefore(pre, stars);
       scrollBottom();
       i++;
-      currentTimeout = setTimeout(drawLine, 38);
+      currentTO = setTimeout(drawLine, 32);
     } else {
-      currentTimeout = setTimeout(callback, 2800);
+      // Show stars
+      stars.textContent = '✦ ✧ ✦ ✧ ✦ ✧ ✦';
+      stars.style.display = 'block';
+      scrollBottom();
+      currentTO = setTimeout(callback, 2800);
     }
   }
   drawLine();
 }
 
-// ======================= PESAN RAHASIA =======================
+// ── Secret Message ──
 function showSecretMessage(callback) {
   msgbox.style.display = 'block';
-  msgbody.textContent = '';
-  typingActive = true;
+  msgcursor.style.display = 'inline-block';
   scrollBottom();
+  typingActive = true;
   let idx = 0;
+  const text = secretMsg;
   function typeChar() {
     if (!typingActive) return;
-    if (idx < secretMsg.length) {
-      msgbody.textContent += secretMsg[idx];
+    if (idx < text.length) {
+      // Insert text before cursor
+      const ch = text[idx];
+      msgbody.insertBefore(document.createTextNode(ch), msgcursor);
       idx++;
       scrollBottom();
-      const delay = secretMsg[idx-1] === '\n' ? 200 : 35;
-      currentTimeout = setTimeout(typeChar, delay);
+      const delay = ch === '\n' ? 220 : 38;
+      currentTO = setTimeout(typeChar, delay);
     } else {
       typingActive = false;
-      currentTimeout = setTimeout(callback, 10000);
+      msgcursor.style.display = 'none';
+      currentTO = setTimeout(callback, 10000);
     }
   }
   typeChar();
 }
 
-// ======================= RESET LOOP =======================
+// ── Reset ──
 function resetAndRestart() {
-  if (currentTimeout) clearTimeout(currentTimeout);
+  if (currentTO) clearTimeout(currentTO);
   typingActive = false;
   step = 0;
-  err1_index = 0;
-  err2_index = 0;
+  err1i = 0; err2i = 0;
   log.innerHTML = '';
   clearBanner();
   hideMsgBox();
@@ -282,56 +503,49 @@ function resetAndRestart() {
   runSequence();
 }
 
-// ======================= INTI URUTAN (PASTI BERURUTAN) =======================
+// ── Main Sequence ──
 function runSequence() {
   if (step === 0) {
-    // Fase 1: error pertama
-    if (err1_index < errors1.length) {
-      const [cls, txt] = errors1[err1_index++];
-      addLine(cls, txt, log);
-      currentTimeout = setTimeout(runSequence, 90 + Math.random() * 110);
+    if (err1i < errors1.length) {
+      const [cls, txt] = errors1[err1i++];
+      addLine(cls, txt);
+      currentTO = setTimeout(runSequence, 80 + Math.random() * 120);
     } else {
-      // error pertama selesai -> pindah ke banner
       step = 1;
       showHappyBirthday(() => {
         step = 2;
         runSequence();
       });
     }
-  } 
-  else if (step === 2) {
-    // Fase 2: error kedua (setelah banner SELESAI)
-    if (err2_index < errors2.length) {
-      const [cls, txt] = errors2[err2_index++];
-      addLine(cls, txt, log);
-      currentTimeout = setTimeout(runSequence, 90 + Math.random() * 130);
+  } else if (step === 2) {
+    if (err2i < errors2.length) {
+      const [cls, txt] = errors2[err2i++];
+      addLine(cls, txt);
+      currentTO = setTimeout(runSequence, 90 + Math.random() * 130);
     } else {
-      // error kedua selesai -> pindah ke pesan
       step = 3;
-      showSecretMessage(() => {
-        resetAndRestart();
-      });
+      showSecretMessage(() => resetAndRestart());
     }
   }
 }
 
-// ======================= ANIMASI COMMAND PROMPT =======================
+// ── Command Prompt Animation ──
 function typeCommand() {
   const target = cmdTexts[cmdIndex % cmdTexts.length];
   if (cmdChar <= target.length) {
     cmdEl.textContent = target.slice(0, cmdChar);
     cmdChar++;
-    setTimeout(typeCommand, 65);
+    setTimeout(typeCommand, 60);
   } else {
     setTimeout(() => {
       cmdChar = 0;
       cmdIndex++;
-      setTimeout(typeCommand, 300);
-    }, 900);
+      setTimeout(typeCommand, 280);
+    }, 950);
   }
 }
 
-// ======================= MULAI =======================
+// ── Boot ──
 typeCommand();
 runSequence();
 </script>
